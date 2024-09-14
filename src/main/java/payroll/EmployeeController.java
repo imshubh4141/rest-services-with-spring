@@ -1,10 +1,12 @@
 package payroll;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
@@ -15,9 +17,15 @@ public class EmployeeController {
     @Autowired
     private EmployeeRepository repository;
 
+    @Autowired
+    private EmployeeModelAssembler assembler;
+
     @GetMapping("/employees")
-    List<Employee> getAllEmployees(){
-        return repository.findAll();
+    CollectionModel<EntityModel<Employee>> getAllEmployees(){
+        List<EntityModel<Employee>> employees = repository.findAll().stream()
+                .map(employee -> assembler.toModel(employee)).toList();
+
+        return CollectionModel.of(employees, linkTo(methodOn(EmployeeController.class).getAllEmployees()).withSelfRel());
     }
 
     @PostMapping("/employees")
@@ -30,10 +38,7 @@ public class EmployeeController {
         Employee employee = repository.findById(id)
                 .orElseThrow(() -> new EmployeeNotFoundException(id));
 
-        return EntityModel.of(employee,
-                    linkTo(methodOn(EmployeeController.class).getEmployeeById(id)).withSelfRel(),
-                    linkTo(methodOn(EmployeeController.class).getAllEmployees()).withRel("employees")
-                );
+        return assembler.toModel(employee);
     }
 
     @PutMapping("/employees/{id}")
