@@ -61,7 +61,7 @@ public class Employee {
         this.lastName = parts[1];
     }
 
-    public String getName(){
+    public String getFullName(){
         return this.firstName + " " + this.lastName;
     }
 

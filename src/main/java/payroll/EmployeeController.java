@@ -1,5 +1,7 @@
 package payroll;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
@@ -13,6 +15,8 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 public class EmployeeController {
+
+    private static final Logger log = LoggerFactory.getLogger(EmployeeController.class);
 
     @Autowired
     private EmployeeRepository repository;
@@ -38,6 +42,7 @@ public class EmployeeController {
         Employee employee = repository.findById(id)
                 .orElseThrow(() -> new EmployeeNotFoundException(id));
 
+        log.info("Employee object before modelling: {}", employee);
         return assembler.toModel(employee);
     }
 
@@ -45,7 +50,7 @@ public class EmployeeController {
     Employee replaceEmployee(@RequestBody Employee newEmployee, @PathVariable Long id){
         return repository.findById(id)
                 .map(employee -> {
-                    employee.setName(newEmployee.getName());
+                    employee.setName(newEmployee.getFullName());
                     employee.setRole(newEmployee.getRole());
                     return repository.save(employee);
                 })
